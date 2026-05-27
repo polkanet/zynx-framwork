@@ -109,6 +109,53 @@ pub const Context = struct {
         }
         return null;
     }
+
+    pub fn jsonBody(self: *Context, comptime T: type) !T {
+        if (self.request.body.len == 0) return error.EmptyBody;
+        var parsed = try std.json.parseFromSlice(T, self.allocator, self.request.body, .{});
+        defer parsed.deinit();
+        return parsed.value;
+    }
+
+    pub fn formBody(self: *Context) !std.StringHashMap([]const u8) {
+        var map = std.StringHashMap([]const u8).init(self.allocator);
+        if (self.request.body.len == 0) return map;
+        var it = std.mem.splitScalar(u8, self.request.body, '&');
+        while (it.next()) |pair| {
+            if (pair.len == 0) continue;
+            if (std.mem.indexOfScalar(u8, pair, '=')) |eq| {
+                const raw_key = pair[0..eq];
+                const raw_val = pair[eq + 1 ..];
+                const key = try percentDecode(self.allocator, raw_key);
+                const val = try percentDecode(self.allocator, raw_val);
+                try map.put(key, val);
+            } else {
+                const key = try percentDecode(self.allocator, pair);
+                try map.put(key, "");
+            }
+        }
+        return map;
+    }
+
+    pub fn sendFile(self: *Context, path: []const u8) !void {
+        const file = try std.fs.cwd().openFile(path, .{});
+        defer file.close();
+        const content = try file.readToEndAlloc(self.allocator, 10 * 1024 * 1024);
+        defer self.allocator.free(content);
+        const ext = std.fs.path.extension(path);
+        _ = try self.response.contentType(mimeTypeFromExt(ext));
+        try self.response.body.appendSlice(self.allocator, content);
+    }
+
+    pub fn sendFileWithMax(self: *Context, path: []const u8, max_size: usize) !void {
+        const file = try std.fs.cwd().openFile(path, .{});
+        defer file.close();
+        const content = try file.readToEndAlloc(self.allocator, max_size);
+        defer self.allocator.free(content);
+        const ext = std.fs.path.extension(path);
+        _ = try self.response.contentType(mimeTypeFromExt(ext));
+        try self.response.body.appendSlice(self.allocator, content);
+    }
 };
 
 pub const Request = struct {
@@ -172,3 +219,41 @@ pub const Route = struct {
     middlewares: []const MiddlewareFn = &.{},
     name: ?[]const u8 = null,
 };
+
+fn percentDecode(allocator: std.mem.Allocator, input: []const u8) ![]const u8 {
+    var result = try std.ArrayList(u8).initCapacity(allocator, input.len);
+    errdefer result.deinit();
+    var i: usize = 0;
+    while (i < input.len) : (i += 1) {
+        const c = input[i];
+        if (c == '+') {
+            try result.append(' ');
+        } else if (c == '%' and i + 2 < input.len) {
+            const hi = try std.fmt.charToDigit(input[i + 1], 16);
+            const lo = try std.fmt.charToDigit(input[i + 2], 16);
+            try result.append(@as(u8, @intCast(hi * 16 + lo)));
+            i += 2;
+        } else {
+            try result.append(c);
+        }
+    }
+    return result.toOwnedSlice();
+}
+
+fn mimeTypeFromExt(ext: []const u8) []const u8 {
+    if (std.mem.eql(u8, ext, ".html")) return "text/html; charset=utf-8";
+    if (std.mem.eql(u8, ext, ".css")) return "text/css; charset=utf-8";
+    if (std.mem.eql(u8, ext, ".js")) return "application/javascript; charset=utf-8";
+    if (std.mem.eql(u8, ext, ".mjs")) return "application/javascript; charset=utf-8";
+    if (std.mem.eql(u8, ext, ".json")) return "application/json";
+    if (std.mem.eql(u8, ext, ".png")) return "image/png";
+    if (std.mem.eql(u8, ext, ".jpg") or std.mem.eql(u8, ext, ".jpeg")) return "image/jpeg";
+    if (std.mem.eql(u8, ext, ".gif")) return "image/gif";
+    if (std.mem.eql(u8, ext, ".svg")) return "image/svg+xml";
+    if (std.mem.eql(u8, ext, ".ico")) return "image/x-icon";
+    if (std.mem.eql(u8, ext, ".txt")) return "text/plain; charset=utf-8";
+    if (std.mem.eql(u8, ext, ".woff2")) return "font/woff2";
+    if (std.mem.eql(u8, ext, ".woff")) return "font/woff";
+    if (std.mem.eql(u8, ext, ".ttf")) return "font/ttf";
+    return "application/octet-stream";
+}

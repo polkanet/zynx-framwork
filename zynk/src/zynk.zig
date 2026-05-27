@@ -58,6 +58,9 @@ pub const compressionModule = @import("middleware/compression.zig");
 pub const rateLimit = @import("middleware/ratelimit.zig").middleware;
 pub const rateLimitModule = @import("middleware/ratelimit.zig");
 pub const metrics = @import("middleware/metrics.zig");
+pub const staticFile = @import("middleware/static.zig");
+pub const recovery = @import("middleware/recovery.zig");
+pub const csrf = @import("middleware/csrf.zig");
 
 pub const Template = @import("render/template.zig");
 

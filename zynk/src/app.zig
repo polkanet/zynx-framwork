@@ -115,6 +115,12 @@ pub const Group = struct {
         try self.app.put(full, handler);
     }
 
+    pub fn patch(self: Group, path: []const u8, handler: Handler) !void {
+        const full = try std.fmt.allocPrint(self.app.allocator, "{s}{s}", .{ self.prefix, path });
+        defer self.app.allocator.free(full);
+        try self.app.patch(full, handler);
+    }
+
     pub fn delete(self: Group, path: []const u8, handler: Handler) !void {
         const full = try std.fmt.allocPrint(self.app.allocator, "{s}{s}", .{ self.prefix, path });
         defer self.app.allocator.free(full);

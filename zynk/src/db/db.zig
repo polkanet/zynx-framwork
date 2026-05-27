@@ -49,6 +49,17 @@ pub const QueryResult = struct {
     }
 };
 
+pub const WhereClause = struct {
+    column: []const u8,
+    op: []const u8,
+    value: []const u8,
+};
+
+pub const OrderByField = struct {
+    column: []const u8,
+    direction: enum { asc, desc },
+};
+
 pub const SelectQuery = struct {
     table: []const u8,
     fields: []const []const u8,
@@ -56,17 +67,6 @@ pub const SelectQuery = struct {
     where_clauses: std.ArrayList(WhereClause),
     order_by_fields: std.ArrayList(OrderByField),
     limit_val: ?u64 = null,
-
-    pub const WhereClause = struct {
-        column: []const u8,
-        op: []const u8,
-        value: []const u8,
-    };
-
-    pub const OrderByField = struct {
-        column: []const u8,
-        direction: enum { asc, desc },
-    };
 
     fn init(allocator: std.mem.Allocator, table: []const u8, fields: []const []const u8) SelectQuery {
         return .{
@@ -144,49 +144,185 @@ pub const SelectQuery = struct {
 pub const InsertQuery = struct {
     table: []const u8,
     allocator: std.mem.Allocator,
+    columns: std.ArrayList([]const u8),
+    values: std.ArrayList([]const u8),
     returning_fields: []const []const u8 = &.{},
 
     fn init(allocator: std.mem.Allocator, table: []const u8) InsertQuery {
-        return .{ .table = table, .allocator = allocator };
+        return .{
+            .table = table,
+            .allocator = allocator,
+            .columns = .empty,
+            .values = .empty,
+        };
     }
 
-    pub fn returning(self: InsertQuery, fields: []const []const u8) InsertQuery {
-        var result = self;
-        result.returning_fields = fields;
-        return result;
+    pub fn deinit(self: *InsertQuery) void {
+        self.columns.deinit(self.allocator);
+        self.values.deinit(self.allocator);
+    }
+
+    pub fn set(self: *InsertQuery, columns: []const []const u8, vals: []const []const u8) !void {
+        for (columns) |c| try self.columns.append(self.allocator, c);
+        for (vals) |v| try self.values.append(self.allocator, v);
+    }
+
+    pub fn returning(self: *InsertQuery, fields: []const []const u8) *InsertQuery {
+        self.returning_fields = fields;
+        return self;
     }
 
     pub fn build(self: *const InsertQuery) ![]const u8 {
-        _ = self;
-        return "INSERT INTO ...";
+        var sql = std.ArrayList(u8).init(self.allocator);
+        defer sql.deinit();
+        try sql.appendSlice("INSERT INTO ");
+        try sql.appendSlice(self.table);
+
+        if (self.columns.items.len > 0) {
+            try sql.appendSlice(" (");
+            for (self.columns.items, 0..) |col, i| {
+                if (i > 0) try sql.appendSlice(", ");
+                try sql.appendSlice(col);
+            }
+            try sql.appendSlice(") VALUES (");
+            for (self.values.items, 0..) |val, i| {
+                if (i > 0) try sql.appendSlice(", ");
+                try sql.appendSlice(val);
+            }
+            try sql.appendSlice(")");
+        } else {
+            try sql.appendSlice(" DEFAULT VALUES");
+        }
+
+        if (self.returning_fields.len > 0) {
+            try sql.appendSlice(" RETURNING ");
+            for (self.returning_fields, 0..) |field, i| {
+                if (i > 0) try sql.appendSlice(", ");
+                try sql.appendSlice(field);
+            }
+        }
+
+        return sql.toOwnedSlice();
     }
 };
 
 pub const UpdateQuery = struct {
     table: []const u8,
     allocator: std.mem.Allocator,
+    sets: std.ArrayList(SetClause),
+    where_clauses: std.ArrayList(WhereClause),
+    returning_fields: []const []const u8 = &.{},
+
+    pub const SetClause = struct {
+        column: []const u8,
+        value: []const u8,
+    };
 
     fn init(allocator: std.mem.Allocator, table: []const u8) UpdateQuery {
-        return .{ .table = table, .allocator = allocator };
+        return .{
+            .table = table,
+            .allocator = allocator,
+            .sets = .empty,
+            .where_clauses = .empty,
+        };
+    }
+
+    pub fn deinit(self: *UpdateQuery) void {
+        self.sets.deinit(self.allocator);
+        self.where_clauses.deinit(self.allocator);
+    }
+
+    pub fn set(self: *UpdateQuery, column: []const u8, value: []const u8) !void {
+        try self.sets.append(self.allocator, .{ .column = column, .value = value });
+    }
+
+    pub fn where(self: *UpdateQuery, column: []const u8, op: []const u8, value: []const u8) !void {
+        try self.where_clauses.append(self.allocator, .{ .column = column, .op = op, .value = value });
+    }
+
+    pub fn returning(self: *UpdateQuery, fields: []const []const u8) *UpdateQuery {
+        self.returning_fields = fields;
+        return self;
     }
 
     pub fn build(self: *const UpdateQuery) ![]const u8 {
-        _ = self;
-        return "UPDATE ...";
+        var sql = std.ArrayList(u8).init(self.allocator);
+        defer sql.deinit();
+        try sql.appendSlice("UPDATE ");
+        try sql.appendSlice(self.table);
+        try sql.appendSlice(" SET ");
+
+        for (self.sets.items, 0..) |s, i| {
+            if (i > 0) try sql.appendSlice(", ");
+            try sql.appendSlice(s.column);
+            try sql.appendSlice(" = ");
+            try sql.appendSlice(s.value);
+        }
+
+        if (self.where_clauses.items.len > 0) {
+            try sql.appendSlice(" WHERE ");
+            for (self.where_clauses.items, 0..) |clause, i| {
+                if (i > 0) try sql.appendSlice(" AND ");
+                try sql.appendSlice(clause.column);
+                try sql.appendSlice(" ");
+                try sql.appendSlice(clause.op);
+                try sql.appendSlice(" ");
+                try sql.appendSlice(clause.value);
+            }
+        }
+
+        if (self.returning_fields.len > 0) {
+            try sql.appendSlice(" RETURNING ");
+            for (self.returning_fields, 0..) |field, i| {
+                if (i > 0) try sql.appendSlice(", ");
+                try sql.appendSlice(field);
+            }
+        }
+
+        return sql.toOwnedSlice();
     }
 };
 
 pub const DeleteQuery = struct {
     table: []const u8,
     allocator: std.mem.Allocator,
+    where_clauses: std.ArrayList(WhereClause),
 
     fn init(allocator: std.mem.Allocator, table: []const u8) DeleteQuery {
-        return .{ .table = table, .allocator = allocator };
+        return .{
+            .table = table,
+            .allocator = allocator,
+            .where_clauses = .empty,
+        };
+    }
+
+    pub fn deinit(self: *DeleteQuery) void {
+        self.where_clauses.deinit(self.allocator);
+    }
+
+    pub fn where(self: *DeleteQuery, column: []const u8, op: []const u8, value: []const u8) !void {
+        try self.where_clauses.append(self.allocator, .{ .column = column, .op = op, .value = value });
     }
 
     pub fn build(self: *const DeleteQuery) ![]const u8 {
-        _ = self;
-        return "DELETE FROM ...";
+        var sql = std.ArrayList(u8).init(self.allocator);
+        defer sql.deinit();
+        try sql.appendSlice("DELETE FROM ");
+        try sql.appendSlice(self.table);
+
+        if (self.where_clauses.items.len > 0) {
+            try sql.appendSlice(" WHERE ");
+            for (self.where_clauses.items, 0..) |clause, i| {
+                if (i > 0) try sql.appendSlice(" AND ");
+                try sql.appendSlice(clause.column);
+                try sql.appendSlice(" ");
+                try sql.appendSlice(clause.op);
+                try sql.appendSlice(" ");
+                try sql.appendSlice(clause.value);
+            }
+        }
+
+        return sql.toOwnedSlice();
     }
 };
 

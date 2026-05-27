@@ -1,5 +1,5 @@
 0
-2810 7780079 1779814267090889309 b4ca8b104af193eaa421af6ea638f923 0 zynk/src/zynk.zig
+2973 7780079 1779879441638372213 c88e6e85c9016232554de0c1d4a50236 0 zynk/src/zynk.zig
 10806 2147947 1776106215000000000 8c5b1950a5ebd26914a8e350d73d6999 1 std/std.zig
 2525 2147393 1776106215000000000 71e0dabdb301ba10f8ca420941767e70 1 std/BitStack.zig
 102991 2147424 1776106215000000000 75827315f3c3585390aebfe0aa119cb6 1 std/Build.zig
@@ -68,7 +68,7 @@
 26670 2148017 1776106215000000000 93724928f5f24ae5c14b26c9c2d3ed3f 1 std/zip.zig
 1242 2148022 1776106215000000000 c5e5cebc2cfc9353dc65aa5193442b60 1 std/zon.zig
 31720 2147945 1776106215000000000 ffd3a427c45dfa3cbc9761a1361d1d3c 1 std/start.zig
-2810 7780079 1779814267090889309 b4ca8b104af193eaa421af6ea638f923 0 /Users/polka/Desktop/polka-web-framwork/zynk/src/zynk.zig
+2973 7780079 1779879441638372213 c88e6e85c9016232554de0c1d4a50236 0 /Users/polka/Desktop/polka-web-framwork/zynk/src/zynk.zig
 60609 2147399 1776106215000000000 75c8c12c985cd8192806ca67e152ab02 1 std/Build/Cache.zig
 38981 2147418 1776106215000000000 be5b6a4bf599cf8fb54d6cb84cf21e5a 1 std/Build/Step.zig
 26577 2147401 1776106215000000000 98f120af5a4b7824a26104c00a1d4bd1 1 std/Build/Module.zig
@@ -338,8 +338,8 @@
 46916 2148021 1776106215000000000 7bf4408cdd1c84975a793e5daefb12a8 1 std/zon/stringify.zig
 32374 2148019 1776106215000000000 d6fd80a48ef08dc277abac7b527c7110 1 std/zon/Serializer.zig
 2159 2147922 1776106215000000000 e912d0164349d3c86eb8b1226a86388f 1 std/os/windows/tls.zig
-3850 7778889 1779812400236192159 3ef2396e7be649f6ef776fe9b4c9c1ff 0 /Users/polka/Desktop/polka-web-framwork/zynk/src/app.zig
-4874 7778427 1779814210117771332 effeb3ad8549b942c347d600d80a1873 0 /Users/polka/Desktop/polka-web-framwork/zynk/src/core/context.zig
+4118 7778889 1779879438451759285 ff390b2fd92ac715038d3b501d777b43 0 /Users/polka/Desktop/polka-web-framwork/zynk/src/app.zig
+8718 7778427 1779879414329577714 4c54adb42793f62b983a39493313a055 0 /Users/polka/Desktop/polka-web-framwork/zynk/src/core/context.zig
 12564 7778727 1779813666261245905 b0417484a490e05fb7590fac030e702f 0 /Users/polka/Desktop/polka-web-framwork/zynk/src/router/router.zig
 9641 7778824 1779815686992702706 454c1268afc70b041ae8388a879ec66b 0 /Users/polka/Desktop/polka-web-framwork/zynk/src/core/server.zig
 1228 7778906 1779812864293721217 16c675ec8725ebeeb518719e3a42e51d 0 /Users/polka/Desktop/polka-web-framwork/zynk/src/middleware/logger.zig
@@ -347,9 +347,12 @@
 2988 7779093 1779814137194954911 baa4ea69c3cbcb5fdf450684276023c2 0 /Users/polka/Desktop/polka-web-framwork/zynk/src/middleware/compression.zig
 1952 7779149 1779814131311870167 c7f74143147715b9b5b8987299d1e5bd 0 /Users/polka/Desktop/polka-web-framwork/zynk/src/middleware/ratelimit.zig
 1351 7807819 1779814264505936349 1827424a02aefde96585b346d35bf056 0 /Users/polka/Desktop/polka-web-framwork/zynk/src/middleware/metrics.zig
+5075 7864209 1779879376291103525 12b22407d5a989fb58bfd9fee8c3c1aa 0 /Users/polka/Desktop/polka-web-framwork/zynk/src/middleware/static.zig
+1561 7864365 1779879381289995805 ecac6f6abfc24700536f3e6a9b292f00 0 /Users/polka/Desktop/polka-web-framwork/zynk/src/middleware/recovery.zig
+5440 7864662 1779879470568218597 f9e8a583455d3d98af02420e0b5ab2e7 0 /Users/polka/Desktop/polka-web-framwork/zynk/src/middleware/csrf.zig
 7819 7779532 1779814237445665759 4bc7845c4385ce8b5733cbc6e7f67388 0 /Users/polka/Desktop/polka-web-framwork/zynk/src/render/template.zig
 6706 7779765 1779814003824742522 0a9279e7b9a83edb861f426e9fe7815c 0 /Users/polka/Desktop/polka-web-framwork/zynk/src/auth/auth.zig
-6338 7779944 1779814250939158136 952158895fe77a1bf576fa84ef4f189b 0 /Users/polka/Desktop/polka-web-framwork/zynk/src/db/db.zig
+11066 7779944 1779879475284969940 2df65d2796bfe5111555b686db038f2c 0 /Users/polka/Desktop/polka-web-framwork/zynk/src/db/db.zig
 1238 7779984 1779814207725467150 ea152ab53f3270f29a29f8e0993cba0d 0 /Users/polka/Desktop/polka-web-framwork/zynk/src/realtime/websocket.zig
 10179 7779627 1779814327732594527 e5502b79282eb84099b9e5cf178cc27e 0 /Users/polka/Desktop/polka-web-framwork/zynk/src/cli/cli.zig
 8149 2147398 1776106215000000000 848266c110821122ce6bc572fc7966c9 1 std/Build/Cache/Path.zig

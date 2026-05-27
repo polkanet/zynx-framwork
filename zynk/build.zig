@@ -31,13 +31,9 @@ pub fn build(b: *std.Build) void {
     const test_step = b.step("test", "Run framework tests");
     test_step.dependOn(&run_tests.step);
 
-    // Router tests
+    // Router tests (uses the full module so relative imports resolve correctly)
     const router_tests = b.addTest(.{
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/router/router.zig"),
-            .target = target,
-            .optimize = optimize,
-        }),
+        .root_module = zynk_mod,
     });
     const run_router_tests = b.addRunArtifact(router_tests);
     const router_test_step = b.step("test-router", "Run router tests");
