@@ -1,5 +1,5 @@
-./zig-out/*
-./.zig-cache/*
+zig-out/*
+.zig-cache/*
 test_cwd
-./zynk/.zig-cache/*
-./zynk/.zig-out/*
+zynk/.zig-cache/*
+zynk/.zig-out/*
